@@ -10,20 +10,24 @@ const PORT = process.env.PORT || 5050;
 
 app.use(helmet());
 
-app.use
-  const allowedOrigins = [
+const allowedOrigins = [
   "http://localhost:5173",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
 );
-;
 
 app.use(express.json({ limit: "10kb" }));
 
@@ -214,6 +218,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`KEYFLOW backend running at http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`KEYFLOW backend running on port ${PORT}`);
 });
