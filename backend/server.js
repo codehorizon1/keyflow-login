@@ -6,17 +6,24 @@ const { rateLimit } = require("express-rate-limit");
 const { randomBytes, scryptSync, timingSafeEqual } = require("crypto");
 
 const app = express();
-const PORT = 5050;
+const PORT = process.env.PORT || 5050;
 
 app.use(helmet());
 
+app.use
+  const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
 );
+;
 
 app.use(express.json({ limit: "10kb" }));
 
