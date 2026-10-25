@@ -1,0 +1,1841 @@
+
+/* ============================================
+   KEYFLOW — INTERACTIVE ACCESS SYSTEM
+   Login + Registration + Floating Panel
+============================================ */
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+
+  color: #25283b;
+  background: #f7f8f4;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --kf-ink: #25283b;
+  --kf-muted: #777d70;
+  --kf-lime: #d5ff70;
+  --kf-violet: #5651cf;
+  --kf-violet-dark: #4440b6;
+  --kf-border: #dfe2d8;
+  --kf-paper: #f7f8f4;
+  --kf-white: #ffffff;
+  --kf-error: #be414d;
+  --kf-success: #338761;
+
+  --kf-radius: 14px;
+  --kf-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgb(86 81 207 / 26%);
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #ffffff;
+  background: var(--kf-violet);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ============================================
+   1. PAGE FOUNDATION
+============================================ */
+
+.kf-page {
+  position: relative;
+  isolation: isolate;
+
+  display: flex;
+  min-height: 100vh;
+  min-height: 100svh;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      ellipse at 48% 30%,
+      rgb(255 255 255 / 100%) 0%,
+      rgb(255 255 255 / 0%) 58%
+    ),
+    var(--kf-paper);
+
+  color: var(--kf-ink);
+}
+
+/* ============================================
+   2. BACKGROUND ENVIRONMENT
+============================================ */
+
+.kf-background {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Subtle technical grid. */
+
+.kf-grid {
+  position: absolute;
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgb(73 82 115 / 3.5%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgb(73 82 115 / 3.5%) 1px,
+      transparent 1px
+    );
+
+  background-size: 52px 52px;
+
+  mask-image: radial-gradient(
+    ellipse at center,
+    #000 0%,
+    transparent 83%
+  );
+}
+
+/* Soft ambient colours. */
+
+.kf-glow {
+  position: absolute;
+  width: 390px;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+  filter: blur(76px);
+  opacity: 0.3;
+
+  animation: kf-glow-drift 17s ease-in-out infinite alternate;
+}
+
+.kf-glow-a {
+  top: 0;
+  left: -175px;
+  background: #d4e0ff;
+}
+
+.kf-glow-b {
+  right: -165px;
+  bottom: -30px;
+  background: #e8dcff;
+  animation-delay: -8s;
+}
+
+/* Abstract flowing lines. */
+
+.kf-flow-line {
+  position: absolute;
+  right: -12%;
+  bottom: 8%;
+
+  width: 76%;
+  height: 180px;
+
+  border-top: 1px solid rgb(95 100 207 / 20%);
+  border-radius: 50%;
+
+  transform: rotate(-13deg) scaleY(0.8);
+}
+
+.kf-flow-b {
+  right: -10%;
+  bottom: 4%;
+
+  border-color: rgb(195 130 190 / 22%);
+
+  transform: rotate(-9deg) scaleY(0.8);
+}
+
+.kf-flow-line::after {
+  position: absolute;
+  inset: 18px -15px -15px 10px;
+
+  border-top: 1px solid rgb(95 100 207 / 15%);
+  border-radius: inherit;
+
+  content: "";
+}
+
+/* ============================================
+   3. HEADER
+============================================ */
+
+.kf-header {
+  position: relative;
+  z-index: 3;
+
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 0 6%;
+
+  border-bottom: 1px solid rgb(37 40 59 / 8%);
+}
+
+.kf-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+
+  color: var(--kf-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.kf-brand-mark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+
+  border-radius: 10px;
+
+  background: var(--kf-ink);
+  color: var(--kf-lime);
+
+  font-size: 21px;
+  font-weight: 400;
+
+  transition:
+    transform 250ms var(--kf-ease),
+    border-radius 250ms ease,
+    background 250ms ease;
+}
+
+.kf-brand:hover .kf-brand-mark {
+  transform: rotate(-8deg);
+  border-radius: 50%;
+  background: #343752;
+}
+
+.kf-header-meta {
+  color: var(--kf-muted);
+
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-align: right;
+}
+
+/* ============================================
+   4. DESKTOP WORKSPACE
+============================================ */
+
+.kf-workspace {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  width: min(100% - 40px, 1200px);
+  flex: 1;
+
+  grid-template-columns:
+    minmax(0, 0.82fr)
+    minmax(0, 1.18fr);
+
+  align-items: center;
+  gap: clamp(48px, 7vw, 110px);
+
+  align-self: center;
+
+  padding: 64px 0 72px;
+}
+
+/* Introductory text. */
+
+.kf-intro {
+  max-width: 460px;
+  padding-bottom: 10px;
+
+  animation: kf-content-enter 650ms var(--kf-ease) both;
+}
+
+.kf-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin: 0 0 19px;
+
+  color: #737968;
+
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+}
+
+.kf-eyebrow::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+
+  border-radius: 2px;
+  background: #90bc53;
+
+  content: "";
+  transform: rotate(45deg);
+}
+
+.kf-intro h1 {
+  margin: 0;
+
+  color: var(--kf-ink);
+
+  font-size: clamp(45px, 5.3vw, 72px);
+  font-weight: 600;
+  line-height: 0.99;
+  letter-spacing: -0.075em;
+
+  text-wrap: balance;
+}
+
+.kf-intro h1 span {
+  color: var(--kf-violet);
+}
+
+.kf-subtitle {
+  margin: 19px 0 0;
+
+  color: var(--kf-muted);
+
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+/* ============================================
+   5. FLOATING ACCESS PANEL
+============================================ */
+
+.kf-access-panel {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 28px;
+
+  border: 1px solid rgb(37 40 59 / 9%);
+  border-radius: 21px;
+
+  background: rgb(255 255 255 / 83%);
+
+  box-shadow:
+    0 2px 5px rgb(30 34 56 / 3%),
+    0 22px 65px rgb(30 34 56 / 7%);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  transform-origin: center;
+
+  animation: kf-panel-float 6s ease-in-out infinite;
+
+  will-change: transform;
+}
+
+.kf-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding-bottom: 19px;
+}
+
+.kf-micro-label {
+  color: #818675;
+
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+}
+
+.kf-system-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #737968;
+
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.kf-system-state > span {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  background: #6aaf81;
+
+  box-shadow: 0 0 0 4px rgb(106 175 129 / 12%);
+}
+
+/* ============================================
+   6. THREE-CHANNEL SELECTOR
+============================================ */
+
+.kf-channel-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.kf-channel {
+  position: relative;
+  isolation: isolate;
+
+  display: flex;
+  min-width: 0;
+  min-height: 122px;
+
+  flex-direction: column;
+  align-items: stretch;
+
+  padding: 13px 12px 15px;
+
+  overflow: hidden;
+
+  border: 1px solid #e0e2d9;
+  border-radius: 13px;
+
+  background: #fbfcf8;
+  color: var(--kf-ink);
+
+  cursor: pointer;
+  text-align: left;
+
+  transition:
+    border-color 220ms ease,
+    background 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms var(--kf-ease);
+}
+
+.kf-channel:hover {
+  transform: translateY(-2px);
+  border-color: #c7cbd7;
+  background: #fff;
+}
+
+.kf-channel:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.kf-channel.active {
+  border-color: var(--kf-ink);
+  background: var(--kf-ink);
+  color: #fff;
+
+  box-shadow: 0 7px 20px rgb(37 40 59 / 10%);
+}
+
+.kf-channel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+
+  margin-bottom: 17px;
+}
+
+.kf-channel-number {
+  color: #899080;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+.kf-channel.active .kf-channel-number {
+  color: #b9bfaf;
+}
+
+.kf-channel-icon {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  place-items: center;
+
+  border: 1px solid #e1e2e8;
+  border-radius: 8px;
+
+  background: #fff;
+  color: var(--kf-violet);
+
+  font-size: 17px;
+
+  transition:
+    transform 220ms ease,
+    border-radius 220ms ease;
+}
+
+.kf-channel:hover .kf-channel-icon {
+  transform: scale(1.05);
+  border-radius: 50%;
+}
+
+.kf-channel.active .kf-channel-icon {
+  border-color: rgb(213 255 112 / 35%);
+  background: rgb(213 255 112 / 12%);
+  color: var(--kf-lime);
+}
+
+.kf-google-g {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  place-items: center;
+
+  border: 1px solid #e1e2e8;
+  border-radius: 8px;
+
+  background: #fff;
+
+  background-image: conic-gradient(
+    from -40deg,
+    #4285f4,
+    #34a853 32%,
+    #fbbc05 58%,
+    #ea4335 78%,
+    #4285f4
+  );
+
+  background-clip: text;
+  color: transparent;
+
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+
+  -webkit-background-clip: text;
+}
+
+.kf-channel.active .kf-google-g {
+  border-color: rgb(213 255 112 / 35%);
+}
+
+.kf-channel > strong {
+  overflow: hidden;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kf-channel > small {
+  display: block;
+  margin-top: 5px;
+
+  overflow: hidden;
+
+  color: #858a7d;
+  font-size: 9px;
+  line-height: 1.4;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kf-channel.active > small {
+  color: #bdc2b4;
+}
+
+.kf-channel-indicator {
+  position: absolute;
+  right: 11px;
+  bottom: 0;
+  left: 11px;
+
+  height: 3px;
+
+  border-radius: 3px 3px 0 0;
+  background: transparent;
+
+  transition: background 230ms ease;
+}
+
+.kf-channel.active .kf-channel-indicator {
+  background: var(--kf-lime);
+  animation: kf-indicator-enter 250ms var(--kf-ease) both;
+}
+
+/* ============================================
+   7. ACTIVE CHANNEL CONTENT
+============================================ */
+
+.kf-active-method {
+  margin-top: 23px;
+  padding-top: 23px;
+
+  border-top: 1px solid #e8e9e2;
+
+  animation: kf-method-enter 350ms var(--kf-ease) both;
+}
+
+.kf-active-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 23px;
+}
+
+.kf-active-heading h2 {
+  margin: 6px 0 0;
+
+  color: var(--kf-ink);
+
+  font-size: clamp(18px, 2vw, 23px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+}
+
+.kf-active-arrow {
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex-shrink: 0;
+  place-items: center;
+
+  border: 1px solid #e1e2ec;
+  border-radius: 12px;
+
+  background: #f4f4ff;
+  color: var(--kf-violet);
+
+  font-size: 21px;
+
+  transition:
+    transform 220ms ease,
+    background 220ms ease;
+}
+
+.kf-access-panel:hover .kf-active-arrow {
+  transform: translate(2px, -2px);
+  background: #ececff;
+}
+
+/* ============================================
+   8. FORM BASE AND INPUTS
+============================================ */
+
+.kf-form {
+  display: flex;
+  flex-direction: column;
+
+  animation: kf-method-enter 280ms ease both;
+}
+
+.kf-form > label {
+  margin-bottom: 8px;
+
+  color: #414456;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kf-form > input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+
+  padding: 0 14px;
+
+  border: 1px solid #d6d9ce;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #fbfcf9;
+  color: var(--kf-ink);
+
+  font-size: 14px;
+
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.kf-form > input::placeholder {
+  color: #9a9e92;
+  opacity: 1;
+}
+
+.kf-form > input:hover {
+  border-color: #b8bdad;
+}
+
+.kf-form > input:focus {
+  border-color: var(--kf-violet);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(86 81 207 / 9%);
+}
+
+.kf-form > input[aria-invalid="true"] {
+  border-color: var(--kf-error);
+}
+
+/* ============================================
+   9. LABEL ROW AND PASSWORD FIELDS
+============================================ */
+
+.kf-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 19px;
+  margin-bottom: 8px;
+}
+
+.kf-label-row > label {
+  margin: 0;
+
+  color: #414456;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kf-text-button,
+.kf-back-button {
+  padding: 5px 0;
+
+  border: 0;
+  background: transparent;
+  color: var(--kf-violet);
+
+  cursor: pointer;
+
+  font-size: 11px;
+  text-decoration: none;
+
+  transition: color 160ms ease;
+}
+
+.kf-text-button:hover,
+.kf-back-button:hover {
+  color: var(--kf-violet-dark);
+  text-decoration: underline;
+}
+
+.kf-password-field {
+  position: relative;
+  width: 100%;
+}
+
+.kf-password-field input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+
+  padding: 0 69px 0 14px;
+
+  border: 1px solid #d6d9ce;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #fbfcf9;
+  color: var(--kf-ink);
+
+  font-size: 14px;
+
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.kf-password-field input::placeholder {
+  color: #9a9e92;
+  opacity: 1;
+}
+
+.kf-password-field input:hover {
+  border-color: #b8bdad;
+}
+
+.kf-password-field input:focus {
+  border-color: var(--kf-violet);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgb(86 81 207 / 9%);
+}
+
+.kf-password-field input[aria-invalid="true"] {
+  border-color: var(--kf-error);
+}
+
+.kf-show-password {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+
+  padding: 5px 0;
+
+  transform: translateY(-50%);
+
+  border: 0;
+  background: transparent;
+  color: var(--kf-violet);
+
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.kf-show-password:hover {
+  color: var(--kf-violet-dark);
+}
+
+/* Space between registration fields. */
+
+.kf-register-form > .kf-spaced-label {
+  margin-top: 16px;
+}
+
+/* ============================================
+   10. PASSWORD STRENGTH AND CAPS LOCK
+============================================ */
+
+.kf-strength {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 10px;
+
+  color: #7b8174;
+  font-size: 10px;
+}
+
+.kf-strength-bars {
+  display: flex;
+  width: 100px;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.kf-strength-bars span {
+  height: 4px;
+  flex: 1;
+
+  border-radius: 5px;
+  background: #e4e6de;
+
+  transition:
+    background 220ms ease,
+    transform 220ms ease;
+}
+
+.kf-strength-bars span.strength-1 {
+  background: #dc6666;
+}
+
+.kf-strength-bars span.strength-2 {
+  background: #dda54d;
+}
+
+.kf-strength-bars span.strength-3 {
+  background: #91b956;
+}
+
+.kf-strength-bars span.strength-4 {
+  background: #36a879;
+}
+
+.kf-inline-notice {
+  margin: 9px 0 0;
+
+  color: #916426;
+  font-size: 11px;
+}
+
+/* ============================================
+   11. PRIMARY BUTTON
+============================================ */
+
+.kf-primary-button {
+  position: relative;
+  isolation: isolate;
+
+  display: flex;
+  width: 100%;
+  min-height: 51px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  margin-top: 18px;
+  padding: 0 16px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--kf-ink);
+  border-radius: 10px;
+
+  background: var(--kf-ink);
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.kf-primary-button::before {
+  position: absolute;
+  z-index: -1;
+  top: -30%;
+  bottom: -30%;
+  left: -90%;
+
+  width: 42%;
+
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgb(213 255 112 / 19%),
+    transparent
+  );
+
+  content: "";
+
+  transform: skewX(-18deg);
+
+  transition: left 550ms var(--kf-ease);
+}
+
+.kf-primary-button:hover:not(:disabled)::before {
+  left: 145%;
+}
+
+.kf-primary-button:hover:not(:disabled) {
+  border-color: #363950;
+  background: #363950;
+
+  box-shadow: 0 6px 18px rgb(37 40 59 / 12%);
+}
+
+.kf-primary-button:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.kf-primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.kf-primary-button > span:last-child {
+  flex-shrink: 0;
+
+  color: var(--kf-lime);
+  font-size: 19px;
+
+  transition: transform 200ms ease;
+}
+
+.kf-primary-button:hover:not(:disabled) > span:last-child {
+  transform: translate(3px, -3px);
+}
+
+/* A little extra room for registration's main button. */
+
+.kf-register-form .kf-primary-button {
+  margin-top: 21px;
+}
+
+/* ============================================
+   12. CREATE ACCOUNT / SIGN-IN SWITCH
+============================================ */
+
+.kf-auth-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+
+  margin-top: 19px;
+  padding-top: 17px;
+
+  border-top: 1px solid #e8e9e2;
+
+  color: #797e72;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.kf-auth-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  padding: 4px 0;
+
+  border: 0;
+  background: transparent;
+  color: var(--kf-violet);
+
+  cursor: pointer;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  transition: color 160ms ease;
+}
+
+.kf-auth-switch button:hover {
+  color: var(--kf-violet-dark);
+}
+
+.kf-auth-switch button span {
+  display: inline-block;
+  transition: transform 160ms ease;
+}
+
+.kf-auth-switch button:hover span {
+  transform: translate(2px, -2px);
+}
+
+/* ============================================
+   13. GOOGLE CHANNEL
+============================================ */
+
+.kf-provider-state {
+  animation: kf-method-enter 300ms ease both;
+}
+
+.kf-provider-icon {
+  display: grid;
+  width: 45px;
+  height: 45px;
+  place-items: center;
+
+  margin-bottom: 13px;
+
+  border: 1px solid #e3e4ea;
+  border-radius: 13px;
+
+  background: #fff;
+
+  background-image: conic-gradient(
+    from -40deg,
+    #4285f4,
+    #34a853 32%,
+    #fbbc05 58%,
+    #ea4335 78%,
+    #4285f4
+  );
+
+  background-clip: text;
+  color: transparent;
+
+  font-family: Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+
+  -webkit-background-clip: text;
+}
+
+.kf-provider-state > p:not(.kf-notice):not(.kf-provider-footnote) {
+  margin: 0;
+
+  color: var(--kf-muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.kf-provider-footnote {
+  margin: 13px 0 0;
+
+  color: #858a7d;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+/* ============================================
+   14. MOBILE NUMBER AND OTP
+============================================ */
+
+.kf-phone-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.kf-phone-field > span {
+  display: grid;
+  min-height: 50px;
+  flex-shrink: 0;
+  place-items: center;
+
+  padding: 0 11px;
+
+  border: 1px solid #d6d9ce;
+  border-radius: 10px;
+
+  background: #fbfcf9;
+
+  font-size: 12px;
+}
+
+.kf-phone-field input {
+  display: block;
+  width: 0;
+  min-width: 0;
+  min-height: 50px;
+  flex: 1;
+
+  padding: 0 13px;
+
+  border: 1px solid #d6d9ce;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #fbfcf9;
+  color: var(--kf-ink);
+
+  font-size: 14px;
+
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.kf-phone-field input:focus {
+  border-color: var(--kf-violet);
+  background: #fff;
+
+  box-shadow: 0 0 0 3px rgb(86 81 207 / 9%);
+}
+
+.kf-phone-field input::placeholder {
+  color: #9a9e92;
+  opacity: 1;
+}
+
+.kf-verified-number {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 15px;
+
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+
+  border-bottom: 1px solid #e8e9e2;
+}
+
+.kf-verified-number .kf-micro-label {
+  width: 100%;
+}
+
+.kf-verified-number strong {
+  flex: 1;
+  min-width: 0;
+
+  color: var(--kf-ink);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+/* ============================================
+   15. ERROR, NOTICE AND PRIVACY
+============================================ */
+
+.kf-error {
+  margin: 10px 1px 0;
+
+  color: var(--kf-error);
+
+  font-size: 11px;
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+
+  animation: kf-method-enter 200ms ease both;
+}
+
+.kf-notice {
+  margin: 11px 0 0;
+
+  color: #6e7464;
+
+  font-size: 11px;
+  line-height: 1.7;
+
+  overflow-wrap: anywhere;
+}
+
+.kf-notice strong {
+  color: var(--kf-ink);
+  font-weight: 600;
+}
+
+.kf-privacy-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  margin-top: 20px;
+
+  color: #858a7e;
+
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.kf-privacy-icon {
+  color: #6f7893;
+  font-size: 15px;
+}
+
+/* ============================================
+   16. DASHBOARD
+============================================ */
+
+.kf-dashboard-page {
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      rgb(255 255 255 / 100%) 0%,
+      transparent 62%
+    ),
+    var(--kf-paper);
+}
+
+.kf-dashboard {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  width: min(100% - 48px, 430px);
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+
+  padding: 55px 0;
+
+  text-align: center;
+
+  animation: kf-content-enter 450ms var(--kf-ease) both;
+}
+
+.kf-dashboard > .kf-eyebrow {
+  justify-content: center;
+}
+
+.kf-dashboard > .kf-eyebrow::before {
+  background: var(--kf-success);
+}
+
+.kf-success-mark {
+  display: grid;
+  width: 57px;
+  height: 57px;
+  place-items: center;
+
+  margin-bottom: 23px;
+
+  border: 1px solid #cce8d5;
+  border-radius: 50%;
+
+  background: #e5f6eb;
+  color: var(--kf-success);
+
+  font-size: 26px;
+
+  animation: kf-success-pop 500ms var(--kf-ease) both;
+}
+
+.kf-dashboard h1 {
+  margin: 0;
+
+  color: var(--kf-ink);
+
+  font-size: clamp(36px, 5vw, 46px);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -1.7px;
+}
+
+.kf-dashboard .kf-subtitle {
+  margin: 14px 0 0;
+
+  color: var(--kf-muted);
+
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.kf-account-panel {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+
+  margin-top: 31px;
+  padding: 18px;
+
+  border: 1px solid var(--kf-border);
+  border-radius: 14px;
+
+  background: rgb(255 255 255 / 76%);
+
+  text-align: left;
+}
+
+.kf-account-panel > strong {
+  max-width: 100%;
+
+  color: var(--kf-ink);
+
+  font-size: 13px;
+  font-weight: 500;
+
+  overflow-wrap: anywhere;
+}
+
+.kf-session-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--kf-success);
+  font-size: 10px;
+}
+
+.kf-session-status > span {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+  background: #40a675;
+}
+
+.kf-dashboard .kf-primary-button {
+  margin-top: 18px;
+}
+
+.kf-demo-note {
+  margin: 19px 0 0;
+
+  color: var(--kf-muted);
+  font-size: 10px;
+}
+
+/* ============================================
+   17. FOOTER
+============================================ */
+
+.kf-footer {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  min-height: 53px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 0 6%;
+
+  border-top: 1px solid rgb(37 40 59 / 8%);
+
+  color: #868b7d;
+
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================
+   18. ANIMATIONS
+============================================ */
+
+@keyframes kf-panel-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -7px, 0);
+  }
+}
+
+@keyframes kf-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kf-method-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kf-indicator-enter {
+  from {
+    transform: scaleX(0.3);
+    transform-origin: left;
+  }
+
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@keyframes kf-glow-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.96);
+  }
+
+  to {
+    transform: translate3d(32px, -20px, 0) scale(1.08);
+  }
+}
+
+@keyframes kf-success-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.78) rotate(-10deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* ============================================
+   19. TABLET LAYOUT
+============================================ */
+
+@media (max-width: 900px) {
+  .kf-workspace {
+    width: min(100% - 40px, 650px);
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: 42px;
+
+    padding-top: 50px;
+    padding-bottom: 50px;
+  }
+
+  .kf-intro {
+    max-width: 560px;
+  }
+
+  .kf-intro h1 {
+    font-size: clamp(48px, 7vw, 65px);
+  }
+
+  .kf-access-panel {
+    width: 100%;
+    max-width: 650px;
+
+    padding: 25px;
+
+    animation-duration: 6.5s;
+  }
+
+  .kf-glow {
+    width: 300px;
+  }
+}
+
+/* ============================================
+   20. MOBILE LAYOUT
+============================================ */
+
+@media (max-width: 540px) {
+  .kf-header {
+    min-height: 67px;
+    padding: 0 21px;
+  }
+
+  .kf-brand {
+    font-size: 12px;
+  }
+
+  .kf-brand-mark {
+    width: 29px;
+    height: 29px;
+  }
+
+  .kf-header-meta {
+    max-width: 145px;
+
+    font-size: 8px;
+    line-height: 1.6;
+  }
+
+  .kf-workspace {
+    width: 100%;
+
+    grid-template-columns: minmax(0, 1fr);
+    gap: 31px;
+
+    padding: 39px 20px 38px;
+  }
+
+  .kf-intro {
+    padding: 0 3px;
+  }
+
+  .kf-intro .kf-eyebrow {
+    margin-bottom: 13px;
+  }
+
+  .kf-intro h1 {
+    font-size: clamp(42px, 11vw, 58px);
+    line-height: 1.02;
+  }
+
+  .kf-subtitle {
+    margin-top: 14px;
+    font-size: 12px;
+  }
+
+  .kf-access-panel {
+    width: 100%;
+    max-width: none;
+
+    padding: 17px;
+
+    border-radius: 16px;
+
+    animation-duration: 7s;
+  }
+
+  .kf-panel-heading {
+    padding-bottom: 13px;
+  }
+
+  .kf-micro-label,
+  .kf-system-state {
+    font-size: 8px;
+  }
+
+  .kf-channel-switch {
+    gap: 6px;
+  }
+
+  .kf-channel {
+    min-height: 106px;
+    padding: 10px 8px 12px;
+
+    border-radius: 10px;
+  }
+
+  .kf-channel-top {
+    margin-bottom: 14px;
+  }
+
+  .kf-channel-number {
+    font-size: 8px;
+  }
+
+  .kf-channel-icon,
+  .kf-google-g {
+    width: 24px;
+    height: 24px;
+
+    border-radius: 7px;
+    font-size: 17px;
+  }
+
+  .kf-channel > strong {
+    font-size: 11px;
+  }
+
+  .kf-channel > small {
+    font-size: 8px;
+  }
+
+  .kf-channel-indicator {
+    right: 8px;
+    left: 8px;
+  }
+
+  .kf-active-method {
+    margin-top: 16px;
+    padding-top: 17px;
+  }
+
+  .kf-active-heading {
+    margin-bottom: 17px;
+  }
+
+  .kf-active-heading h2 {
+    font-size: 18px;
+  }
+
+  .kf-active-arrow {
+    width: 31px;
+    height: 31px;
+
+    font-size: 17px;
+  }
+
+  .kf-form > input,
+  .kf-password-field input,
+  .kf-phone-field input {
+    min-height: 47px;
+    font-size: 16px;
+  }
+
+  .kf-primary-button {
+    min-height: 48px;
+  }
+
+  .kf-register-form > .kf-spaced-label {
+    margin-top: 13px;
+  }
+
+  .kf-auth-switch {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .kf-footer {
+    min-height: 49px;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+
+    padding: 12px 20px;
+
+    font-size: 8px;
+    line-height: 1.6;
+  }
+
+  .kf-glow {
+    width: 240px;
+    filter: blur(65px);
+  }
+
+  .kf-glow-a {
+    left: -160px;
+  }
+
+  .kf-glow-b {
+    right: -150px;
+  }
+
+  .kf-flow-line {
+    right: -32%;
+    bottom: 5%;
+    width: 135%;
+  }
+
+  .kf-dashboard {
+    padding: 43px 23px;
+  }
+
+  .kf-dashboard h1 {
+    font-size: 35px;
+  }
+}
+
+/* ============================================
+   21. VERY SMALL PHONES
+============================================ */
+
+@media (max-width: 370px) {
+  .kf-header {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .kf-header-meta {
+    max-width: 115px;
+    font-size: 7px;
+  }
+
+  .kf-workspace {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .kf-intro h1 {
+    font-size: 41px;
+  }
+
+  .kf-access-panel {
+    padding: 12px;
+  }
+
+  .kf-channel-switch {
+    gap: 4px;
+  }
+
+  .kf-channel {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .kf-channel > small {
+    font-size: 7px;
+  }
+
+  .kf-channel-icon,
+  .kf-google-g {
+    width: 22px;
+    height: 22px;
+  }
+
+  .kf-footer {
+    padding-right: 14px;
+    padding-left: 14px;
+    font-size: 7px;
+  }
+
+  .kf-strength {
+    gap: 7px;
+    font-size: 8px;
+  }
+
+  .kf-strength-bars {
+    width: 80px;
+  }
+
+  .kf-register-form > .kf-spaced-label {
+    margin-top: 12px;
+  }
+
+  .kf-auth-switch {
+    gap: 4px 6px;
+    font-size: 10px;
+  }
+
+  .kf-auth-switch button {
+    font-size: 10px;
+  }
+}
+
+/* ============================================
+   22. ACCESSIBILITY
+============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .kf-access-panel {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+
+  .kf-primary-button::before {
+    display: none;
+  }
+}
